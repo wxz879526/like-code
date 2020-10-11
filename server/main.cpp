@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
     if (bind(serv_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
         error_handler("bind error");
 
-    printf("server start listen........\n");
+    printf("server start listen...........\n");
 
     if (listen(serv_sock, 5) == -1)
         error_handler("listen error");
