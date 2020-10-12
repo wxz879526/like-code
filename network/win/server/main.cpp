@@ -1,16 +1,16 @@
 #include <iostream>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <winsock2.h>
 
-void error_handler(char *message);
+#pragma comment(lib, "ws2_32.lib")
+
+void error_handler(const char *message);
 
 int main(int argc, char* argv[]) {
-    int serv_sock;
-    int client_sock;
+    SOCKET serv_sock;
+    SOCKET client_sock;
 
     struct sockaddr_in serv_addr;
     struct sockaddr_in client_addr;
@@ -22,6 +22,10 @@ int main(int argc, char* argv[]) {
         printf("Usage: %s <port>\n", argv[0]);
         exit(1);
     }
+
+    WSAData wsaData;
+    if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
+        error_handler("WSAStartup() error");
 
     serv_sock = socket(PF_INET, SOCK_STREAM, 0);
     if (serv_sock == -1)
@@ -40,19 +44,21 @@ int main(int argc, char* argv[]) {
     if (listen(serv_sock, 5) == -1)
         error_handler("listen error");
 
-    socklen_t client_len = sizeof(client_addr);
+    int client_len = sizeof(client_addr);
     client_sock = accept(serv_sock, (struct sockaddr*)&client_addr, &client_len);
     if (client_sock == -1)
         error_handler("accept error");
 
-    write(client_sock, message, sizeof(message));
-    close(client_sock);
-    close(serv_sock);
+    send(client_sock, message, sizeof(message), 0);
+    closesocket(client_sock);
+    closesocket(serv_sock);
+
+    WSACleanup();
 
     return 0;
 }
 
-void error_handler(char *message)
+void error_handler(const char *message)
 {
     fputs(message, stderr);
     fputc('\n', stderr);
